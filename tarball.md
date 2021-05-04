@@ -76,3 +76,12 @@ Now you can transfer each part.
 
 
 <img src="img/tarball/md5sum.png" >
+
+
+
+## Notes:
+
+Cheers to David Eccles (@gringene_bio) on twitter for pointing out:
+
+###### FWIW, tar ("tape archive") does have built-in multi-volume support. It's a bit fiddly to use, though:
+https://www.thewebhelp.com/linux/creating-multivolume-tar-files/
