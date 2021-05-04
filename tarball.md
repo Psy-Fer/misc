@@ -54,7 +54,7 @@ where:
     my_fast5_data.tar is the tarball to split
     my_fast5_data.tar.part is the prefix to give each part before the number
 
-image of results
+
 <img src="img/tarball/size_split.png" >
 
 Now you can transfer each part.
