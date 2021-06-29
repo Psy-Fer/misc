@@ -1,7 +1,8 @@
 import os
 import sys
 import argparse
-import edlib
+# import edlib
+import mappy as mp
 '''
 
     James M. Ferguson (j.ferguson@garvan.org.au)
@@ -75,9 +76,9 @@ def main():
     #group = parser.add_mutually_exclusive_group()
     parser.add_argument("-f", "--fasta",
                         help="fasta file with assemblies")
-    parser.add_argument("-s", "--sequence",
-                        help="base sequence to search for")
-    parser.add_argument("-m", "--missmatch", type=int,
+    parser.add_argument("-r", "--ref",
+                        help="fasta with sequences to search for")
+    parser.add_argument("-m", "--missmatch", type=int, default=10,
                         help="Number of allowed missmatches for sequence. 0=exact")
 
     args = parser.parse_args()
@@ -87,23 +88,62 @@ def main():
         parser.print_help(sys.stderr)
         sys.exit(1)
 
-    q = args.sequence.lower()
+    # q = args.sequence.lower()
+    #
+    # a = mp.Aligner(args.ref, preset="splice")
 
-    with open(args.fasta, 'r') as f:
+    baits = {}
+    with open(args.ref, 'r') as f:
         for l in f:
             l = l.strip('\n')
             if l[0] == ">":
                 name = l
             else:
                 seq = l
-                k = edlib.align(q, l.lower(),
-                                mode="HW", task="locations", k=args.missmatch)
-                if k['locations']:
-                    start = k['locations'][0][0]
-                    end = k['locations'][0][1]
-                    score = k['editDistance']
-                    print("{} start={} end={} score={}".format(name, start, end, score))
-                    print(l[start:]+l[:start])
+                baits[name] = seq
+
+
+    # might need to do this twice, second time with seq = seq[len/2:]+seq[:len/2] to get end hits
+    map_dic = {}
+    C = 0
+    a = mp.Aligner(args.fasta, preset="map-ont")
+    if not a:
+        raise Exception("ERROR: failed to load/build index")
+    C = 0
+    for bait in baits:
+        # print(bait)
+        # print(baits[bait])
+        for hit in a.map(baits[bait]): # traverse alignments
+            print("hit:", hit)
+            if bait not in map_dic:
+                map_dic[bait] = {}
+            # https://github.com/lh3/minimap2/tree/master/python
+            # if hit.mapq >= args.mapq:
+            map_dic[bait][C] = {"ctg": hit.ctg, "ctg_len": hit.ctg_len,
+                          "r_st": hit.r_st, "r_en": hit.r_en, "strand": hit.strand,
+                          "mapq": hit.mapq, "trans_strand": hit.trans_strand,
+                          "is_primary": hit.is_primary,
+                          "q_st": hit.q_st, "q_en": hit.q_en}
+
+            C += 1
+        C = 0
+        if map_dic:
+            print("map_dic:", map_dic)
+
+    # open fasta, cut from start hut and re-organise, print out
+    # dump metadata file of hits
+
+
+        # k = edlib.align(baits[bait], seq, mode="HW", task="locations", k=args.missmatch)
+        # print(k)
+        # if k['locations']:
+        #     start = k['locations'][0][0]
+        #     end = k['locations'][0][1]
+        #     score = k['editDistance']
+        #     print("{} start={} end={} score={}".format(name, start, end, score))
+        # print(l[start:]+l[:start])
+        # get best hits
+        # print(l[start:]+l[:start])
 
 if __name__ == '__main__':
     main()
